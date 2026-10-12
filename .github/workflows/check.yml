@@ -1,0 +1,29 @@
+name: Check release build
+
+# Builds and verifies both release ZIPs for every pull request, so a compile or packaging error shows up before
+# a merge instead of in the release job. Nothing is published.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Package and verify the Automatic release ZIP (with install.cmd and uninstall.cmd)
+        run: |
+          & ./tools/New-Witcher3ModsReleaseArchive.ps1 -Variant Automatic -OutputPath "$env:RUNNER_TEMP/check-automatic.zip"
+      - name: Package and verify the Manual release ZIP (no scripts)
+        run: |
+          & ./tools/New-Witcher3ModsReleaseArchive.ps1 -Variant Manual -OutputPath "$env:RUNNER_TEMP/check-manual.zip"
