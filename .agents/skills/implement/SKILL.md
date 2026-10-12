@@ -1,0 +1,89 @@
+---
+name: implement
+description: Implement Witcher 3 mod changes through toolchain preflight, native-source research, WitcherScript/Flash edits, REDkit cooking, local-build handoff and manual verification. Use for implementation and diagnostic-build requests, not read-only explanations. Includes the repository's build commands and source locations for a fresh session.
+---
+
+# Implement
+
+Work from the repository root. The deliverable is the installable package folder under `src/` (`src/modWitcher3Mods*`) that the request concerns, not `.build`. The repository can hold several mods; identify the owning package first and touch only that one. Follow these phases in order; do not announce readiness until the installable folder is complete.
+
+## Phase 1 — Toolchain and scope preflight
+
+Read `AGENTS.md` and all linked rules before edits. Collect the request and additions into a checklist, inspect `git status --short`, and preserve unrelated changes. README edits, game installation, publication and commits need separate user authorization.
+
+Check the tools actually needed for this change with `Test-Path -LiteralPath` / `Get-Command`, then check their invocation works. Do not assume that files or executables from a previous session remain available.
+
+| Capability | Used here | When required |
+| --- | --- | --- |
+| Build runner | Windows PowerShell, .NET | Repository build and package integrity |
+| Flash export/recompile | Java plus JPEXS `ffdec.jar` | Flash/UI changes |
+| Import/cook/bundle | REDkit `bin/x64_RedKit/wcc_lite.exe` | Changed Flash assets |
+| Native API references | Installed game scripts and REDkit AS/SWF sources | Relevant API or UI work |
+| Search | Grep/Glob; otherwise `Get-ChildItem` + `Select-String` | Source discovery |
+
+Known local paths (discovery hints, not portable requirements):
+
+- Game: `D:/SteamLibrary/steamapps/common/The Witcher 3`
+- REDkit: `D:/SteamLibrary/steamapps/common/The Witcher 3 REDkit`
+- Java: `C:/Program Files/JetBrains/WebStorm 2026.2/jbr/bin/java.exe`
+- JPEXS: `.build/tooling/ffdec/ffdec.jar` (unpacked from `.build/tooling/ffdec.zip`, version 26.3.0; `.build` is git-ignored)
+
+Read the relevant scripts' parameter declarations before invoking them. For script-only edits, Java/REDkit cooking is not required if packaged UI assets remain compatible and unchanged. This workflow does not require WolvenKit, a separate old MODkit, or the REDkit GUI. Do not download missing tools automatically; report the missing prerequisite and continue only with work that does not need it. Unpacking an archive already present under `.build/tooling` is fine. Never label an uncooked UI change ready to copy.
+
+Native Java/REDkit commands may require execution approval. Cook scripts may also write temporary resources under REDkit's `bin/gameplay`; obtain required authorization rather than working around sandbox restrictions. Permission for that scratch work is not permission to install into the game.
+
+## Phase 2 — Find the owning source and verify the API
+
+Use current files, not old chat claims, as the starting point:
+
+- Mod runtime: `src/<package>/content/scripts/local/*.ws`.
+- Config matrix: `src/<package>/bin/config/r4game/user_config_matrix/pc/*.xml` (the engine reads it only from `<Game>/bin/config`; see `AGENTS.md`).
+- Flash patches: `tools/flash/*.as.inc`, applied by the `tools/Build-*.ps1` script of the mod; `tools/Pack-*.ps1` cooks the result.
+- Native WitcherScript: `<Game>/content/content0/scripts`; verify signatures, visibility and native event routing of every API you call.
+- Native Flash: `<REDkit>/r4data/gameplay/gui_new/actionscript`; compiled originals in `<REDkit>/r4data/gameplay/gui_new/swf`. Source AS and compiled SWFs can differ: inspect the actual exported class when choosing patch anchors.
+- Official CDPR language/annotation references are linked in `AGENTS.md`. Prefer installed native code for target-version behavior. An `import` declaration exposes an engine call, not its C++ implementation; do not invent the missing internals.
+
+For read-only Flash inspection, export selected classes into an ignored `.build` subdirectory:
+
+```powershell
+& $Witcher3ModsJava -jar $Witcher3ModsFfdec -selectclass 'red.game.witcher3.hud.modules.HudModuleEnemyFocus' -export script '.build/inspect' $Witcher3ModsNativeSwf
+```
+
+Resolve those variables from the verified paths first. Do not copy generated/native source trees into distributable project sources. A diagnostic screenshot proves only the boundary it observes: distinguish loading, construction, stage attachment, registration, configuration and data delivery. Preserve working native behavior outside the mod context.
+
+## Phase 3 — Implement
+
+Edit maintained source, not generated exports. Change the build transformation or `.as.inc` template when changing Flash so the next build reproduces the result. Keep patch anchors unique and fail-fast. Generated files (such as rows from `rows.psd1`) are regenerated by their build script. Review the change against the repository rules at its owning boundary. The user removed the automated test suite; do not recreate test files, fixtures or a test-running phase unless explicitly requested.
+
+For diagnostic builds, use a visible version label, bounded logs, listener/timer cleanup and explicit uncertainty. Avoid gameplay writes, repeated blind reloads, or suppressing native errors. Temporary diagnostics must be removed before release after runtime confirmation.
+
+## Phase 4 — Build and prepare the installable folder
+
+Run from the repository root, substituting the verified tool paths and the scripts of the mod being built:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/Build-<Mod>.ps1 -RedkitPath $Witcher3ModsRedkit -JavaPath $Witcher3ModsJava -FfdecPath $Witcher3ModsFfdec
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/Pack-<Mod>.ps1 -RedkitPath $Witcher3ModsRedkit -AllowRedkitScratch
+```
+
+The build script exports native classes, applies maintained patches and recompiles SWFs into `.build`. The pack script imports the SWF into REDkit resources, cooks for PC, bundles, generates metadata, unbundles and checks artifact integrity before replacing the package's `content/blob0.bundle` and `metadata.store`. It does not install the mod into the game.
+
+Inspect exit codes and logs. `.build/package-*` holds per-step logs, cooked/unpacked resources and previous package backups. If a scratch target already exists, stop and inspect it; do not delete or overwrite an unknown resource to force the build through.
+
+If compilation/cooking fails, report that the build is not ready. Do not distribute mixed new scripts and old incompatible binaries. Distribution packaging belongs to the GitHub release workflow after a PR merge to `main`.
+
+## Phase 5 — Notify the user immediately
+
+Once the complete folder is ready, before unrelated follow-up work, say:
+
+> Implementacja zakończona — folder moda jest gotowy do sprawdzenia w grze.
+
+Link/name the package folder, identify a diagnostic build as diagnostic, state whether the game installation was changed, and give the concrete runtime test needed. Build readiness is not confirmed bug resolution or a release/audit verdict.
+
+## Phase 6 — Final handoff
+
+Report implemented scope, the manual/source/build-integrity checks actually performed and unresolved runtime observations. WitcherScript compilation and in-game behavior still require the target game or suitable editor validation; JPEXS and cooking do not prove them.
+
+There is no automated-test phase beyond the installer test (`tools/Test-Witcher3ModsInstallers.ps1`, run by the pull-request check and the release job). Preserve production build safeguards (input validation, byte/hash comparisons, safe paths and release-tag checks). Run guard only when requested. Do not install, commit, push or publish without the applicable authorization.
+
+Required order: tool preflight → source research → implementation → build/integrity checks → user notification → final result.
