@@ -1,6 +1,6 @@
 name: Check release build
 
-# Builds and verifies both release ZIPs for every pull request, so a compile or packaging error shows up before
+# Builds and verifies both release ZIPs for every pull request, so a packaging error shows up before
 # a merge instead of in the release job. Nothing is published.
 on:
   pull_request:

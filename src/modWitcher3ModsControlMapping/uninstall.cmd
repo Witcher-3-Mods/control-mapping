@@ -118,7 +118,7 @@ function Find-GameDirs {
             $found.Add((Join-Path $r $rel))
         }
     }
-    return @($found | Where-Object { Test-GameDir $_ } | ForEach-Object { [IO.Path]::GetFullPath($_).TrimEnd('\') } | Select-Object -Unique)
+    return @($found | Where-Object { Test-GameDir $_ } | ForEach-Object { Get-DiskCasePath $_ } | Sort-Object -Unique)
 }
 
 function Resolve-GameDir {
