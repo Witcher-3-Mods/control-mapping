@@ -1,0 +1,38 @@
+name: Check release build
+
+# Builds the installers and the release ZIP for every pull request, so a compile or packaging error shows up before
+# a merge instead of in the release job. Nothing is published.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Build install.exe and uninstall.exe from their sources
+        run: |
+          & ./tools/Build-Witcher3ModsInstallers.ps1 -OutputDirectory "$env:RUNNER_TEMP/installers" -Version 0.0.0
+      - name: Test install.exe and uninstall.exe against a fake game folder
+        # Installs, uninstalls from inside the installed mod folder (the way users run it), checks the 1/2 prompt, the
+        # self-removal and that a junction in the mod folder is never followed. Fails the job on the first wrong result.
+        timeout-minutes: 5
+        run: |
+          & ./tools/Test-Witcher3ModsInstallers.ps1 -InstallerDirectory "$env:RUNNER_TEMP/installers"
+      - name: Package and verify the Automatic release ZIP (with install.exe and uninstall.exe)
+        run: |
+          & ./tools/New-Witcher3ModsReleaseArchive.ps1 -Variant Automatic -OutputPath "$env:RUNNER_TEMP/check-automatic.zip" -InstallerDirectory "$env:RUNNER_TEMP/installers"
+      - name: Package and verify the Manual release ZIP (no .exe)
+        run: |
+          & ./tools/New-Witcher3ModsReleaseArchive.ps1 -Variant Manual -OutputPath "$env:RUNNER_TEMP/check-manual.zip"
