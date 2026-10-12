@@ -29,6 +29,8 @@ Source layout:
   text (see the comment at the top of each); the mod's own values are in the block marked "What this installer puts where".
   `tools/New-Witcher3ModsReleaseArchive.ps1 -Variant Automatic|Manual` builds and verifies the release ZIPs; only the
   Automatic ZIP carries the two scripts.
+- `tools/Test-Witcher3ModsInstallers.ps1` is the end-to-end test of `install.cmd` and `uninstall.cmd` (fake game folder); the
+  pull-request check and the release job run it.
 
 Facts established in game (keep them true when changing the code):
 

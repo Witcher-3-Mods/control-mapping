@@ -21,6 +21,12 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+      - name: Test install.cmd and uninstall.cmd against a fake game folder
+        # Runs the real scripts the way a double-click does: install, overwrite, install from the game folder, uninstall from
+        # inside the mod folder, the controls reset, cancelling, and a folder that is not a game. Fails on the first wrong result.
+        timeout-minutes: 5
+        run: |
+          & ./tools/Test-Witcher3ModsInstallers.ps1
       - name: Package and verify the Automatic release ZIP (with install.cmd and uninstall.cmd)
         run: |
           & ./tools/New-Witcher3ModsReleaseArchive.ps1 -Variant Automatic -OutputPath "$env:RUNNER_TEMP/check-automatic.zip"
