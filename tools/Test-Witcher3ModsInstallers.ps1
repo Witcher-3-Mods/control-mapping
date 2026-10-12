@@ -92,6 +92,8 @@ try {
     Assert-Witcher3Mods ($run.ExitCode -eq 0) 'interactive uninstall exits with 0'
     Assert-Witcher3Mods (([regex]::Matches($run.Output, 'Please type 1 or 2\.')).Count -eq 2) 'anything but 1 or 2 asks again'
     Assert-Witcher3Mods (@(Get-ChildItem -LiteralPath $mod -Force).Name -join ',' -eq 'uninstall.exe') 'option 1 leaves the folder to the user'
+    Write-Output $run.Output
+    Write-Output ("docs folder: " + ((Get-ChildItem $docs -Force).Name -join ', '))
     Assert-Witcher3Mods ((-not (Test-Path -LiteralPath $inputSettings)) -and (@(Get-ChildItem $docs -Filter 'input.settings.bak-uninstall-*').Count -eq 1)) 'answering y reset the controls and kept a copy of input.settings'
 
     # Interactive uninstall, option 2: everything including uninstall.exe and its folder goes, a moment after the window closes.
