@@ -168,6 +168,8 @@ try {
         if (-not $xmlSource -and -not (Test-Path -LiteralPath $xmlTarget)) {
             throw "Could not find $ConfigXml next to the mod. Extract the whole ZIP, keeping its 'bin' folder, and run this again."
         }
+        # Run from a ZIP extracted into the game folder, the XML is already where it belongs: there is nothing to copy.
+        if ($xmlSource -and ([IO.Path]::GetFullPath($xmlSource) -ieq [IO.Path]::GetFullPath($xmlTarget))) { $xmlSource = $null }
     }
 
     if (Get-Process -Name 'witcher3' -ErrorAction SilentlyContinue) {
