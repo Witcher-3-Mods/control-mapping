@@ -26,9 +26,9 @@ Each release has two ZIPs with the same mod:
 ## Install automatically (Windows)
 
 1. Close the game. Download the **Automatic** ZIP from the **Releases** page and extract it anywhere.
-2. In the extracted `mods\modWitcher3ModsControlMapping` folder, double-click **`install.cmd`**. It finds your Witcher 3 folder (Steam, GOG, Epic or the usual folders on every drive; it asks for the path if needed), replaces any previous version of the mod in `mods` and puts the config XML into `bin\config`.
+2. In the extracted `mods\mod000_Witcher3ModsControlMapping` folder, double-click **`install.cmd`**. It finds your Witcher 3 folder (Steam, GOG, Epic or the usual folders on every drive; it asks for the path if needed), replaces any previous version of the mod in `mods` (including one installed under the former folder name `modWitcher3ModsControlMapping`) and puts the config XML into `bin\config`.
 
-To remove the mod, double-click **`uninstall.cmd`** (in the extracted folder or in `mods\modWitcher3ModsControlMapping`). It removes the mod folder, its config XML and the mod's own entries in the `*user.settings` files in `Documents\The Witcher 3` (a copy of each edited file is kept) and nothing else. The button swaps you made are stored by the game in `input.settings`, so before removing anything it asks whether to reset **all** your controls to the game defaults: if you answer yes, `input.settings` is moved aside (a copy is kept next to it) and the game creates a fresh one on the next start; if you answer no, it is not touched.
+To remove the mod, double-click **`uninstall.cmd`** (in the extracted folder or in `mods\mod000_Witcher3ModsControlMapping`). It removes the mod folder, its config XML and the mod's own entries in the `*user.settings` files in `Documents\The Witcher 3` (a copy of each edited file is kept) and nothing else. The button swaps you made are stored by the game in `input.settings`, so before removing anything it asks whether to reset **all** your controls to the game defaults: if you answer yes, `input.settings` is moved aside (a copy is kept next to it) and the game creates a fresh one on the next start; if you answer no, it is not touched.
 
 Both files are plain text, so you can open them in Notepad and read exactly what they do. Windows SmartScreen may warn about a downloaded script: choose **More info, Run anyway** if you trust it, or use the Manual package.
 
@@ -37,8 +37,8 @@ Both files are plain text, so you can open them in Notepad and read exactly what
 Requires the PC next-gen version of The Witcher 3. Back up your saves and mod installation before updating.
 
 1. Close the game and open its folder, the one that contains `mods` and `bin`. On Steam: right-click the game → **Manage → Browse local files**.
-2. For an update, first move the previous `modWitcher3ModsControlMapping` folder **outside `mods`**.
-3. Extract the **Manual** ZIP into that folder, merging it with the existing `mods` and `bin`. It places the mod in `mods\modWitcher3ModsControlMapping` (its `.ws` files end up in `content\scripts\local\`) and the config XML in `bin\config\r4game\user_config_matrix\pc\witcher3modscontrolmapping.xml`. The engine reads the XML only from there and ignores it inside the mod folder; without it swapping is rejected.
+2. For an update, first move the previous `mod000_Witcher3ModsControlMapping` folder (or `modWitcher3ModsControlMapping`, the name used by earlier releases) **outside `mods`**.
+3. Extract the **Manual** ZIP into that folder, merging it with the existing `mods` and `bin`. It places the mod in `mods\mod000_Witcher3ModsControlMapping` (its `.ws` files end up in `content\scripts\local\`) and the config XML in `bin\config\r4game\user_config_matrix\pc\witcher3modscontrolmapping.xml`. The engine reads the XML only from there and ignores it inside the mod folder; without it swapping is rejected.
 4. Start the game, allow script compilation and load your save.
 
 Instead of a ZIP you can copy this repository's `src/modWitcher3ModsControlMapping` folder into `mods` (it also holds the installers' sources, which the game ignores) and then move the `bin` folder from inside it out to the game folder, next to `mods`.

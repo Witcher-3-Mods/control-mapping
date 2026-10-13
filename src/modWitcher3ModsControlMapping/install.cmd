@@ -19,7 +19,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=[IO.File]::ReadAllTex
 $ErrorActionPreference = 'Stop'
 
 # ---- What this installer puts where. -----------------------------------------
-$ModFolder = 'modWitcher3ModsControlMapping'      # copied to <game>\mods\<this folder>
+$ModFolder = 'mod000_Witcher3ModsControlMapping'      # copied to <game>\mods\<this folder>; mod000_ sorts it first, so its Flash wins over other UI mods that replace the same file
 $ModTitle  = 'Control Mapping'
 $ConfigXml = 'witcher3modscontrolmapping.xml'      # copied to <game>\bin\config\r4game\user_config_matrix\pc\ (empty: none)
 # -----------------------------------------------------------------------------
@@ -155,6 +155,11 @@ try {
     $game = Resolve-GameDir
     $dest = Join-Path $game "mods\$ModFolder"
     $sameFolder = ([IO.Path]::GetFullPath($source).TrimEnd('\') -ieq [IO.Path]::GetFullPath($dest).TrimEnd('\'))
+    # Earlier releases used the folder name modWitcher3ModsControlMapping. Two copies of the scripts would clash, so a copy under that name is removed.
+    $legacy = @()
+    if (Test-Path -LiteralPath (Join-Path $game 'mods')) {
+        $legacy = @(Get-ChildItem -LiteralPath (Join-Path $game 'mods') -Directory -Filter 'modWitcher3ModsControlMapping' | Where-Object { $_.Name -ne $ModFolder -and $_.FullName.TrimEnd('\') -ne [IO.Path]::GetFullPath($source).TrimEnd('\') })
+    }
 
     # The config XML is next to the mod folder inside the repository layout and two folders up inside the release ZIP.
     $xmlTarget = $null
@@ -180,6 +185,7 @@ try {
     if ($sameFolder) { Write-Host "  - keep the mod where it already is: $dest" }
     elseif (Test-Path -LiteralPath $dest) { Write-Host "  - replace the installed mod: $dest" }
     else { Write-Host "  - install the mod to: $dest" }
+    foreach ($old in $legacy) { Write-Host "  - remove the former copy under its old folder name: $($old.FullName)" }
     if ($xmlSource) { Write-Host "  - copy the option definition to: $xmlTarget" }
     if (-not $yes) {
         $answer = Read-Host 'Continue? [Y/n]'
@@ -192,6 +198,7 @@ try {
         Copy-Item -LiteralPath $source -Destination $dest -Recurse -Force
         Write-Host "Installed $dest"
     }
+    foreach ($old in $legacy) { Remove-ModTree $old.FullName; Write-Host "Removed $($old.FullName)" }
     if ($xmlSource) {
         New-Item -ItemType Directory -Force -Path (Split-Path $xmlTarget -Parent) | Out-Null
         Copy-Item -LiteralPath $xmlSource -Destination $xmlTarget -Force
