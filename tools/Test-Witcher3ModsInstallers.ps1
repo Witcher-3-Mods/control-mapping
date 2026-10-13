@@ -8,7 +8,8 @@
 $ErrorActionPreference = 'Stop'
 $Witcher3ModsRoot = Split-Path $PSScriptRoot -Parent
 $Witcher3ModsPackage = Join-Path $Witcher3ModsRoot 'src/modWitcher3ModsControlMapping'
-$Witcher3ModsModName = 'modWitcher3ModsControlMapping'
+$Witcher3ModsModName = 'mod000_Witcher3ModsControlMapping'
+$Witcher3ModsFormerName = 'modWitcher3ModsControlMapping'
 $Witcher3ModsXmlRelative = 'bin\config\r4game\user_config_matrix\pc\witcher3modscontrolmapping.xml'
 # The work folder is kept short: Windows PowerShell 5.1 and cmd.exe reject long paths.
 $Witcher3ModsWork = Join-Path ([IO.Path]::GetTempPath()) ('w3m-test-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
@@ -37,8 +38,9 @@ try {
     # The release ZIP is extracted into a folder that looks like the game folder: mods\<mod>\... and bin\config\...
     $download = Join-Path $Witcher3ModsWork 'download'
     $downloadMod = "$download\mods\$Witcher3ModsModName"
-    foreach ($dir in @("$game\bin\config\r4game", "$game\content\content0", "$game\mods\modOtherMod", $docs, "$downloadMod\content", (Split-Path "$download\$Witcher3ModsXmlRelative" -Parent))) { New-Item -ItemType Directory -Force $dir | Out-Null }
+    foreach ($dir in @("$game\bin\config\r4game", "$game\content\content0", "$game\mods\modOtherMod", "$game\mods\$Witcher3ModsFormerName", $docs, "$downloadMod\content", (Split-Path "$download\$Witcher3ModsXmlRelative" -Parent))) { New-Item -ItemType Directory -Force $dir | Out-Null }
     Set-Content -LiteralPath "$game\mods\modOtherMod\keep.txt" -Value 'other mod'
+    Set-Content -LiteralPath "$game\mods\$Witcher3ModsFormerName\old.txt" -Value 'copy under the former folder name'
     Set-Content -LiteralPath "$downloadMod\content\blob0.bundle" -Value 'bundle'
     Set-Content -LiteralPath "$download\$Witcher3ModsXmlRelative" -Value '<redxml/>'
     foreach ($name in 'install.cmd', 'uninstall.cmd') { Copy-Item "$Witcher3ModsPackage\$name" $downloadMod }
@@ -74,6 +76,7 @@ try {
     Assert-Witcher3Mods ($output -match 'was installed') 'install.cmd reports success'
     Assert-Witcher3Mods (Test-Path -LiteralPath "$mod\content\blob0.bundle") 'install.cmd copied the mod'
     Assert-Witcher3Mods (Test-Path -LiteralPath $xml) 'install.cmd put the config XML into bin\config'
+    Assert-Witcher3Mods (-not (Test-Path -LiteralPath "$game\mods\$Witcher3ModsFormerName")) 'the copy under the former folder name was removed'
     Assert-Witcher3Mods ((Test-Path -LiteralPath "$mod\install.cmd") -and (Test-Path -LiteralPath "$mod\uninstall.cmd")) 'the installed mod carries both scripts'
     Assert-Witcher3Mods (Test-Path -LiteralPath "$game\mods\modOtherMod\keep.txt") 'another mod was not touched'
     $output = Invoke-Witcher3ModsScript "$downloadMod\install.cmd" "/yes $gameArgument"

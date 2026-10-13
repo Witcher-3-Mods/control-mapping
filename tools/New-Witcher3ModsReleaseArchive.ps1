@@ -6,7 +6,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $Witcher3ModsRoot = Split-Path $PSScriptRoot -Parent
 $Witcher3ModsPackage = Join-Path $Witcher3ModsRoot 'src/modWitcher3ModsControlMapping'
-$Witcher3ModsModName = 'modWitcher3ModsControlMapping'
+# Top-level folder inside the ZIP, and so in the game's mods folder. The mod000_ prefix makes the game load it before other mods, so its patched Flash wins over mods that replace the same file. The repository folder keeps its name.
+$Witcher3ModsModName = 'mod000_Witcher3ModsControlMapping'
 $Witcher3ModsXmlRelative = 'bin/config/r4game/user_config_matrix/pc/witcher3modscontrolmapping.xml'
 # The archive is extracted into the game directory: mods/<mod>/... and bin/config/... (the engine reads
 # the config matrix only from <Game>/bin/config, never from the mod folder).
